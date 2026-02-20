@@ -1,5 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
+import { HashRouter, useNavigate, useLocation } from 'react-router-dom';
 import { FIRST_20_ELEMENTS } from './constants';
 import { ElementData, ViewType, TopicId } from './types';
 import AtomModel from './components/AtomModel';
@@ -7,10 +8,15 @@ import AtomicTheory from './components/AtomicTheory';
 import AtomicDIY from './components/AtomicDIY';
 import HomePage from './components/HomePage';
 
-const App: React.FC = () => {
+const AppContent: React.FC = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const params = new URLSearchParams(location.search);
+  
+  const currentTopic = (params.get('topic') as TopicId | 'home') || 'home';
+  const currentView = (params.get('view') as ViewType) || 'theory';
+
   const [selectedElement, setSelectedElement] = useState<ElementData>(FIRST_20_ELEMENTS[0]);
-  const [currentTopic, setCurrentTopic] = useState<TopicId | 'home'>('home');
-  const [currentView, setCurrentView] = useState<ViewType>('theory');
   const [showScrollTop, setShowScrollTop] = useState(false);
   const modelRef = useRef<HTMLDivElement>(null);
 
@@ -35,10 +41,17 @@ const App: React.FC = () => {
     });
   };
 
-  const handleSelectTopic = (id: TopicId) => {
-    setCurrentTopic(id);
-    setCurrentView('theory'); 
+  const handleSelectTopic = (id: TopicId | 'home') => {
+    if (id === 'home') {
+      navigate('/');
+    } else {
+      navigate(`/?topic=${id}&view=theory`);
+    }
     window.scrollTo(0, 0); 
+  };
+
+  const handleSetView = (view: ViewType) => {
+    navigate(`/?topic=${currentTopic}&view=${view}`);
   };
 
   const handleSelectElement = (el: ElementData) => {
@@ -177,7 +190,7 @@ const App: React.FC = () => {
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
           <div className="flex items-center gap-2 md:gap-4">
             <button 
-              onClick={() => setCurrentTopic('home')}
+              onClick={() => handleSelectTopic('home')}
               className="flex items-center gap-2 md:gap-3 text-left hover:opacity-90 transition-opacity"
             >
               <div className="flex flex-col">
@@ -189,19 +202,19 @@ const App: React.FC = () => {
           {currentTopic === 'atoms' && (
             <nav className="flex bg-blue-700/50 p-1 rounded-2xl backdrop-blur-sm gap-1 overflow-x-auto no-scrollbar max-w-[60%] sm:max-w-none">
               <button 
-                onClick={() => setCurrentView('theory')}
+                onClick={() => handleSetView('theory')}
                 className={`px-3 md:px-5 py-2 rounded-xl text-xs md:text-sm font-bold transition-all whitespace-nowrap ${currentView === 'theory' ? 'bg-white text-blue-700 shadow-md' : 'text-blue-50 hover:bg-blue-600/50'}`}
               >
                 Structure
               </button>
               <button 
-                onClick={() => setCurrentView('explorer')}
+                onClick={() => handleSetView('explorer')}
                 className={`px-3 md:px-5 py-2 rounded-xl text-xs md:text-sm font-bold transition-all whitespace-nowrap ${currentView === 'explorer' ? 'bg-white text-blue-700 shadow-md' : 'text-blue-50 hover:bg-blue-600/50'}`}
               >
                 Explorer
               </button>
               <button 
-                onClick={() => setCurrentView('diy')}
+                onClick={() => handleSetView('diy')}
                 className={`px-3 md:px-5 py-2 rounded-xl text-xs md:text-sm font-bold transition-all whitespace-nowrap ${currentView === 'diy' ? 'bg-white text-blue-700 shadow-md' : 'text-blue-50 hover:bg-blue-600/50'}`}
               >
                 Build! 🔨
@@ -258,6 +271,14 @@ const App: React.FC = () => {
         <p className="mt-2 text-[10px] uppercase tracking-[0.2em] font-black">Empowering the next generation of African Scientists</p>
       </footer>
     </div>
+  );
+};
+
+const App: React.FC = () => {
+  return (
+    <HashRouter>
+      <AppContent />
+    </HashRouter>
   );
 };
 
